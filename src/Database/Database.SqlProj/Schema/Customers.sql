@@ -3,7 +3,7 @@ CREATE TABLE [dbo].[Customers] (
     [FirstName] NVARCHAR(100) NOT NULL,
     [LastName] NVARCHAR(100) NOT NULL,
     [Email] NVARCHAR(255) NOT NULL,
-    [Phone] NVARCHAR(20) NULL,
+    [Phone] NVARCHAR(21) NULL,
     [Address] NVARCHAR(500) NULL,
     [City] NVARCHAR(100) NULL,
     [State] NVARCHAR(50) NULL,

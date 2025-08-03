@@ -21,7 +21,7 @@ public class Customer
     [MaxLength(255)]
     public string Email { get; set; } = string.Empty;
     
-    [MaxLength(20)]
+    [MaxLength(21)]
     public string? Phone { get; set; }
     
     [MaxLength(500)]

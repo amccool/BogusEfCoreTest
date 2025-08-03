@@ -1,0 +1,172 @@
+﻿@page "/"
+@using AspireApp.Web
+@inject IStoreApiClient StoreApiClient
+
+<PageTitle>Store Dashboard</PageTitle>
+
+<div class="container mt-4">
+    <h1>Store Dashboard</h1>
+    
+    @if (stats != null)
+    {
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <h5 class="card-title">Customers</h5>
+                        <p class="card-text display-6">@stats.CustomerCount</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <h5 class="card-title">Products</h5>
+                        <p class="card-text display-6">@stats.ProductCount</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <h5 class="card-title">Orders</h5>
+                        <p class="card-text display-6">@stats.OrderCount</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <h5 class="card-title">Total Revenue</h5>
+                        <p class="card-text display-6">$@stats.TotalRevenue.ToString("N0")</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
+    <div class="row">
+        <div class="col-md-6">
+            <h3>Recent Customers</h3>
+            @if (customers != null)
+            {
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Email</th>
+                                <th>City</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var customer in customers)
+                            {
+                                <tr>
+                                    <td>@customer.FirstName @customer.LastName</td>
+                                    <td>@customer.Email</td>
+                                    <td>@customer.City</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </div>
+        
+        <div class="col-md-6">
+            <h3>Recent Products</h3>
+            @if (products != null)
+            {
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Category</th>
+                                <th>Price</th>
+                                <th>Stock</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var product in products)
+                            {
+                                <tr>
+                                    <td>@product.Name</td>
+                                    <td>@product.Category</td>
+                                    <td>$@product.Price.ToString("N2")</td>
+                                    <td>@product.StockQuantity</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </div>
+    </div>
+
+    <div class="row mt-4">
+        <div class="col-12">
+            <h3>Recent Orders</h3>
+            @if (orders != null)
+            {
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Order #</th>
+                                <th>Customer</th>
+                                <th>Date</th>
+                                <th>Status</th>
+                                <th>Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var order in orders)
+                            {
+                                <tr>
+                                    <td>@order.OrderNumber</td>
+                                    <td>@order.CustomerName</td>
+                                    <td>@order.OrderDate.ToShortDateString()</td>
+                                    <td>
+                                        <span class="badge bg-@(order.Status switch {
+                                            "Delivered" => "success",
+                                            "Shipped" => "info",
+                                            "Processing" => "warning",
+                                            "Cancelled" => "danger",
+                                            _ => "secondary"
+                                        })">@order.Status</span>
+                                    </td>
+                                    <td>$@order.TotalAmount.ToString("N2")</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@code {
+    private AspireApp.Web.StoreStats? stats;
+    private IEnumerable<CustomerSummary>? customers;
+    private IEnumerable<ProductSummary>? products;
+    private IEnumerable<OrderSummary>? orders;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            stats = await StoreApiClient.GetStatsAsync();
+            customers = await StoreApiClient.GetCustomersAsync();
+            products = await StoreApiClient.GetProductsAsync();
+            orders = await StoreApiClient.GetOrdersAsync();
+        }
+        catch (Exception ex)
+        {
+            // In a real application, you'd want to handle this more gracefully
+            Console.WriteLine($"Error loading data: {ex.Message}");
+        }
+    }
+}

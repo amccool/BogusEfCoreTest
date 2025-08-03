@@ -1,0 +1,48 @@
+﻿<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <div class="container">
+        <a class="navbar-brand" href="">Store Management</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav">
+                <li class="nav-item">
+                    <a class="nav-link" href="" @onclick="() => NavMenuCollapsed = true">
+                        <span class="oi oi-dashboard" aria-hidden="true"></span> Dashboard
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="customers" @onclick="() => NavMenuCollapsed = true">
+                        <span class="oi oi-people" aria-hidden="true"></span> Customers
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="products" @onclick="() => NavMenuCollapsed = true">
+                        <span class="oi oi-box" aria-hidden="true"></span> Products
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="orders" @onclick="() => NavMenuCollapsed = true">
+                        <span class="oi oi-cart" aria-hidden="true"></span> Orders
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="store-stats" @onclick="() => NavMenuCollapsed = true">
+                        <span class="oi oi-graph" aria-hidden="true"></span> Statistics
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+@code {
+    private bool NavMenuCollapsed = true;
+
+    private string? NavMenuCssClass => NavMenuCollapsed ? "collapse" : null;
+
+    private void ToggleNavMenu()
+    {
+        NavMenuCollapsed = !NavMenuCollapsed;
+    }
+}

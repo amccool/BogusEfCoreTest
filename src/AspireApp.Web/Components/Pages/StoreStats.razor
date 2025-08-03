@@ -1,0 +1,62 @@
+﻿@page "/store-stats"
+@attribute [StreamRendering(true)]
+@attribute [OutputCache(Duration = 5)]
+
+@inject IStoreApiClient StoreApi
+
+<PageTitle>Store Statistics</PageTitle>
+
+<h1>Store Statistics</h1>
+
+<p>This component demonstrates showing data loaded from a backend API service.</p>
+
+@if (stats == null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <div class="row">
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h5 class="card-title">Customers</h5>
+                    <p class="card-text display-4">@stats.CustomerCount</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h5 class="card-title">Products</h5>
+                    <p class="card-text display-4">@stats.ProductCount</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h5 class="card-title">Orders</h5>
+                    <p class="card-text display-4">@stats.OrderCount</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h5 class="card-title">Revenue</h5>
+                    <p class="card-text display-4">$@stats.TotalRevenue.ToString("N0")</p>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private AspireApp.Web.StoreStats? stats;
+
+    protected override async Task OnInitializedAsync()
+    {
+        stats = await StoreApi.GetStatsAsync();
+    }
+}

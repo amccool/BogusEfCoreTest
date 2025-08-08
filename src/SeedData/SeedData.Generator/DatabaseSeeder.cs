@@ -70,10 +70,9 @@ public class DatabaseSeeder
 
     private static IReadOnlyCollection<Order> GenerateOrders(int amount, IEnumerable<Customer> customers)
     {
-        //var orderId = 1;
+        var customerList = customers.ToList();
         var orderFaker = new Faker<Order>()
-            //.RuleFor(x => x.Id, f => orderId++)
-            .RuleFor(x => x.CustomerId, f => f.PickRandom(customers).Id)
+            .RuleFor(x => x.Customer, f => f.PickRandom(customerList))
             .RuleFor(x => x.OrderNumber, f => $"ORD-{f.Random.Int(10000, 99999)}-{f.Random.Int(1000, 9999)}")
             .RuleFor(x => x.OrderDate, f => f.Date.Past(1, DateTime.Now))
             .RuleFor(x => x.Status, f => f.PickRandom(new[] { "Pending", "Processing", "Shipped", "Delivered", "Cancelled" }))
@@ -93,11 +92,11 @@ public class DatabaseSeeder
 
     private static IReadOnlyCollection<OrderItem> GenerateOrderItems(int amount, IEnumerable<Order> orders, IEnumerable<Product> products)
     {
-        //var orderItemId = 1;
+        var orderList = orders.ToList();
+        var productList = products.ToList();
         var orderItemFaker = new Faker<OrderItem>()
-            //.RuleFor(x => x.Id, f => orderItemId++)
-            .RuleFor(x => x.OrderId, f => f.PickRandom(orders).Id)
-            .RuleFor(x => x.ProductId, f => f.PickRandom(products).Id)
+            .RuleFor(x => x.Order, f => f.PickRandom(orderList))
+            .RuleFor(x => x.Product, f => f.PickRandom(productList))
             .RuleFor(x => x.Quantity, f => f.Random.Int(1, 5))
             .RuleFor(x => x.UnitPrice, f => f.Random.Decimal(10.00m, 500.00m))
             .RuleFor(x => x.TotalPrice, (f, c) => c.UnitPrice * c.Quantity)

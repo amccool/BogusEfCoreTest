@@ -1,0 +1,63 @@
+@page "/customers"
+@attribute [StreamRendering(true)]
+@attribute [OutputCache(Duration = 5)]
+
+@inject IStoreApiClient StoreApi
+
+<PageTitle>Customers</PageTitle>
+
+<h1>Customers</h1>
+
+<p>Manage and view customer information.</p>
+
+@if (customers == null)
+{
+    <p><em>Loading...</em></p>
+}
+else if (!customers.Any())
+{
+    <p><em>No customers found.</em></p>
+}
+else
+{
+    <div class="table-responsive">
+        <table class="table table-striped table-hover">
+            <thead class="table-dark">
+                <tr>
+                    <th>ID</th>
+                    <th>First Name</th>
+                    <th>Last Name</th>
+                    <th>Email</th>
+                    <th>City</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var customer in customers)
+                {
+                    <tr>
+                        <td>@customer.Id</td>
+                        <td>@customer.FirstName</td>
+                        <td>@customer.LastName</td>
+                        <td>
+                            <a href="mailto:@customer.Email">@customer.Email</a>
+                        </td>
+                        <td>@(customer.City ?? "N/A")</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+    
+    <div class="alert alert-info mt-3">
+        <i class="oi oi-info"></i> Showing top 10 customers. Total customers in database: <strong>100</strong>
+    </div>
+}
+
+@code {
+    private IEnumerable<CustomerSummary>? customers;
+
+    protected override async Task OnInitializedAsync()
+    {
+        customers = await StoreApi.GetCustomersAsync();
+    }
+}

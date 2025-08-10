@@ -1,0 +1,105 @@
+@page "/orders"
+@attribute [StreamRendering(true)]
+@attribute [OutputCache(Duration = 5)]
+
+@inject IStoreApiClient StoreApi
+
+<PageTitle>Orders</PageTitle>
+
+<h1>Orders</h1>
+
+<p>View and manage customer orders.</p>
+
+@if (orders == null)
+{
+    <p><em>Loading...</em></p>
+}
+else if (!orders.Any())
+{
+    <p><em>No orders found.</em></p>
+}
+else
+{
+    <div class="table-responsive">
+        <table class="table table-striped table-hover">
+            <thead class="table-dark">
+                <tr>
+                    <th>Order Number</th>
+                    <th>Customer</th>
+                    <th>Order Date</th>
+                    <th>Status</th>
+                    <th>Total Amount</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var order in orders)
+                {
+                    <tr>
+                        <td>
+                            <strong>@order.OrderNumber</strong>
+                            <br />
+                            <small class="text-muted">ID: @order.Id</small>
+                        </td>
+                        <td>@order.CustomerName</td>
+                        <td>@order.OrderDate.ToString("MMM dd, yyyy")</td>
+                        <td>
+                            @{
+                                var statusClass = order.Status switch
+                                {
+                                    "Delivered" => "badge bg-success",
+                                    "Shipped" => "badge bg-info",
+                                    "Processing" => "badge bg-primary",
+                                    "Pending" => "badge bg-warning",
+                                    "Cancelled" => "badge bg-danger",
+                                    _ => "badge bg-secondary"
+                                };
+                            }
+                            <span class="@statusClass">@order.Status</span>
+                        </td>
+                        <td class="text-end">
+                            <strong>@order.TotalAmount.ToString("C")</strong>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+            <tfoot>
+                <tr class="table-secondary">
+                    <td colspan="4" class="text-end"><strong>Total (shown orders):</strong></td>
+                    <td class="text-end"><strong>@orders.Sum(o => o.TotalAmount).ToString("C")</strong></td>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+    
+    <div class="row mt-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Order Status Summary</h5>
+                    <div class="row">
+                        @foreach (var statusGroup in orders.GroupBy(o => o.Status))
+                        {
+                            <div class="col-md-2 text-center">
+                                <h6>@statusGroup.Key</h6>
+                                <p class="display-6">@statusGroup.Count()</p>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="alert alert-info mt-3">
+        <i class="oi oi-info"></i> Showing top 10 orders. Total orders in database: <strong>200</strong>
+    </div>
+}
+
+@code {
+    private IEnumerable<OrderSummary>? orders;
+
+    protected override async Task OnInitializedAsync()
+    {
+        orders = await StoreApi.GetOrdersAsync();
+    }
+}

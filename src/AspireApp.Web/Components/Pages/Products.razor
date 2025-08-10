@@ -1,0 +1,77 @@
+@page "/products"
+@attribute [StreamRendering(true)]
+@attribute [OutputCache(Duration = 5)]
+
+@inject IStoreApiClient StoreApi
+
+<PageTitle>Products</PageTitle>
+
+<h1>Product Catalog</h1>
+
+<p>Browse and manage product inventory.</p>
+
+@if (products == null)
+{
+    <p><em>Loading...</em></p>
+}
+else if (!products.Any())
+{
+    <p><em>No products found.</em></p>
+}
+else
+{
+    <div class="row">
+        @foreach (var product in products)
+        {
+            <div class="col-md-4 mb-4">
+                <div class="card h-100">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="card-title mb-0">@product.Name</h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="card-text">
+                            <span class="badge bg-secondary">@product.Category</span>
+                        </p>
+                        <h4 class="text-success">@product.Price.ToString("C")</h4>
+                        <div class="mt-3">
+                            @if (product.StockQuantity > 20)
+                            {
+                                <span class="badge bg-success">
+                                    <i class="oi oi-check"></i> In Stock (@product.StockQuantity units)
+                                </span>
+                            }
+                            else if (product.StockQuantity > 0)
+                            {
+                                <span class="badge bg-warning">
+                                    <i class="oi oi-warning"></i> Low Stock (@product.StockQuantity units)
+                                </span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-danger">
+                                    <i class="oi oi-x"></i> Out of Stock
+                                </span>
+                            }
+                        </div>
+                    </div>
+                    <div class="card-footer text-muted">
+                        <small>Product ID: @product.Id</small>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+    
+    <div class="alert alert-info mt-3">
+        <i class="oi oi-info"></i> Showing top 10 active products. Total products in database: <strong>50</strong>
+    </div>
+}
+
+@code {
+    private IEnumerable<ProductSummary>? products;
+
+    protected override async Task OnInitializedAsync()
+    {
+        products = await StoreApi.GetProductsAsync();
+    }
+}

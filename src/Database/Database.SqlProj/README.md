@@ -1,29 +1,162 @@
-# New SDK-style SQL project with Microsoft.Build.Sql
+# Database.SqlProj - SSDT Database Schema
 
-## Build
+This project contains the SQL Server Data Tools (SSDT) schema definition for the Store Management System database. It uses the new SDK-style SQL project format with Microsoft.Build.Sql for cross-platform compatibility.
 
-To build the project, run the following command:
+## Database Schema
+
+### Tables
+
+#### Customers
+- **Id** (INT IDENTITY): Primary key, auto-generated
+- **FirstName** (NVARCHAR(100)): Customer's first name
+- **LastName** (NVARCHAR(100)): Customer's last name  
+- **Email** (NVARCHAR(255)): Unique email address
+- **Phone** (NVARCHAR(21)): Contact phone number
+- **Address** (NVARCHAR(500)): Street address
+- **City** (NVARCHAR(100)): City
+- **State** (NVARCHAR(50)): State/Province
+- **ZipCode** (NVARCHAR(20)): Postal code
+- **Country** (NVARCHAR(100)): Country
+- **DateOfBirth** (DATE): Customer's birth date
+- **CreatedDate** (DATETIME2): Record creation timestamp
+- **ModifiedDate** (DATETIME2): Last modification timestamp
+
+#### Products
+- **Id** (INT IDENTITY): Primary key, auto-generated
+- **Name** (NVARCHAR(200)): Product name
+- **Description** (NVARCHAR(1000)): Product description
+- **Price** (DECIMAL(18,2)): Unit price
+- **Category** (NVARCHAR(100)): Product category
+- **SKU** (NVARCHAR(50)): Stock keeping unit (unique)
+- **StockQuantity** (INT): Current inventory level
+- **IsActive** (BIT): Product availability flag
+- **CreatedDate** (DATETIME2): Record creation timestamp
+- **ModifiedDate** (DATETIME2): Last modification timestamp
+
+#### Orders
+- **Id** (INT IDENTITY): Primary key, auto-generated
+- **CustomerId** (INT): Foreign key to Customers table
+- **OrderNumber** (NVARCHAR(50)): Unique order number
+- **OrderDate** (DATETIME2): Order placement date
+- **Status** (NVARCHAR(50)): Order status (Pending, Processing, Shipped, etc.)
+- **TotalAmount** (DECIMAL(18,2)): Order total
+- **ShippingAddress** (NVARCHAR(500)): Delivery address
+- **BillingAddress** (NVARCHAR(500)): Billing address
+- **Notes** (NVARCHAR(1000)): Order notes
+- **CreatedDate** (DATETIME2): Record creation timestamp
+- **ModifiedDate** (DATETIME2): Last modification timestamp
+
+#### OrderItems
+- **Id** (INT IDENTITY): Primary key, auto-generated
+- **OrderId** (INT): Foreign key to Orders table
+- **ProductId** (INT): Foreign key to Products table
+- **Quantity** (INT): Item quantity
+- **UnitPrice** (DECIMAL(18,2)): Price per unit at time of order
+- **TotalPrice** (DECIMAL(18,2)): Line item total
+- **CreatedDate** (DATETIME2): Record creation timestamp
+- **ModifiedDate** (DATETIME2): Last modification timestamp
+
+### Indexes
+
+- **Customers**: Unique index on Email
+- **Products**: Unique index on SKU, index on Category
+- **Orders**: Unique index on OrderNumber, indexes on CustomerId and OrderDate
+- **OrderItems**: Indexes on OrderId and ProductId
+
+### Foreign Key Relationships
+
+- **Orders.CustomerId** → **Customers.Id** (RESTRICT delete)
+- **OrderItems.OrderId** → **Orders.Id** (CASCADE delete)
+- **OrderItems.ProductId** → **Products.Id** (RESTRICT delete)
+
+## Deployment
+
+### Automatic Deployment via Aspire
+
+When running the Aspire AppHost, this database schema is automatically deployed to the SQL Server container using the Community Toolkit SQL Database Projects integration:
+
+```csharp
+var sqlProject = builder.AddSqlProject<Projects.Database_SqlProj>("sqlproject")
+   .WithReference(storeDb)
+   .WaitFor(storeDb);
+```
+
+### Manual Build
+
+To build the project and create a DACPAC:
 
 ```bash
 dotnet build
 ```
 
-🎉 Congrats! You have successfully built the project and now have a `dacpac` to deploy anywhere.
+This creates `bin/Debug/Database.SqlProj.dacpac`
 
-## Publish
+### Manual Deployment
 
-To publish the project, the SqlPackage CLI or the SQL Database Projects extension for Azure Data Studio/VS Code is required. The following command will publish the project to a local SQL Server instance:
-
-```bash
-./SqlPackage /Action:Publish /SourceFile:bin/Debug/Database.SqlProj.dacpac /TargetServerName:localhost /TargetDatabaseName:Database.SqlProj
-```
-
-Learn more about authentication and other options for SqlPackage here: https://aka.ms/sqlpackage-ref
-
-### Install SqlPackage CLI
-
-If you would like to use the command-line utility SqlPackage.exe for deploying the `dacpac`, you can obtain it as a dotnet tool.  The tool is available for Windows, macOS, and Linux.
+To manually deploy using SqlPackage:
 
 ```bash
+# Install SqlPackage if not already installed
 dotnet tool install -g microsoft.sqlpackage
+
+# Deploy to local SQL Server
+sqlpackage /Action:Publish /SourceFile:bin/Debug/Database.SqlProj.dacpac /TargetServerName:localhost /TargetDatabaseName:StoreDb /TargetUser:sa /TargetPassword:YourPassword
 ```
+
+### Docker SQL Server Deployment
+
+When using the Aspire-managed SQL Server container:
+
+```bash
+# The connection string is automatically configured by Aspire
+# Default: Server=localhost,1433;Database=store;User Id=sa;Password=<auto-generated>
+```
+
+## Integration with Entity Framework Core
+
+The SSDT schema is matched by Entity Framework Core entities in the `Database.EfCore` project:
+
+- `Customer.cs` maps to `Customers` table
+- `Product.cs` maps to `Products` table
+- `Order.cs` maps to `Orders` table
+- `OrderItem.cs` maps to `OrderItems` table
+
+### Important Notes
+
+1. **Identity Columns**: All primary keys use SQL Server IDENTITY(1,1) for auto-generation
+2. **Navigation Properties**: EF Core entities use navigation properties for relationships
+3. **Bogus Seeding**: The seeder uses navigation properties to handle identity columns correctly
+
+## Development Workflow
+
+1. **Schema Changes**: Modify the `.sql` files in the Schema folder
+2. **Build**: Run `dotnet build` to validate and create DACPAC
+3. **Deploy**: Run Aspire AppHost to auto-deploy changes
+4. **Verify**: Check deployment in SQL Server Management Studio or Azure Data Studio
+
+## Files Structure
+
+```
+Database.SqlProj/
+├── Database.SqlProj.csproj   # SDK-style project file
+├── README.md                  # This file
+└── Schema/
+    ├── Customers.sql          # Customers table definition
+    ├── Orders.sql            # Orders table definition
+    ├── OrderItems.sql        # OrderItems table definition
+    └── Products.sql          # Products table definition
+```
+
+## Requirements
+
+- .NET 8.0 or later SDK
+- Microsoft.Build.Sql SDK
+- SQL Server 2016 or later (or SQL Server container)
+- Optional: SqlPackage CLI for manual deployment
+
+## Learn More
+
+- [Microsoft.Build.Sql Documentation](https://github.com/microsoft/DacFx)
+- [SqlPackage Reference](https://aka.ms/sqlpackage-ref)
+- [SSDT Documentation](https://docs.microsoft.com/en-us/sql/ssdt/)
+- [Aspire SQL Server Integration](https://learn.microsoft.com/en-us/dotnet/aspire/)
